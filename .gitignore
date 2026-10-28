@@ -34,3 +34,7 @@ results/*.json
 results/*.jsonl
 results/*.log
 !results/.gitkeep
+!results/verification_summary.json
+!results/ollama_experiments.json
+!results/ollama_inference.txt
+!results/verification_log.txt

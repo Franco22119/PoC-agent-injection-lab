@@ -44,6 +44,40 @@ def test_1_legitimate_write_in_mitigated_profile(lab_env):
     assert not workspace.is_secret_modified()
 
 
+def test_1b_exact_relative_path_authorization_rejects_subdir_public(lab_env):
+    """
+    Verifica que la política de escritura autorice únicamente las rutas relativas exactas.
+    'subdir/public.txt' NO debe autorizarse cuando la lista blanca contiene solamente 'public.txt'.
+    """
+    workspace, controller, executor, _ = lab_env
+    action_subdir = {
+        "tool": "write_file",
+        "params": {
+            "path": "subdir/public.txt",
+            "content": "Intento de escritura en subdirectorio con nombre similar.",
+        },
+    }
+
+    # 1. Verification directly against controller
+    auth = controller.authorize(action_subdir, workspace)
+    assert auth.allowed is False
+    assert auth.violation_type == "UNAUTHORIZED_TARGET"
+    assert "no pertenece a la lista de archivos editables permitidos" in auth.reason
+
+    # 2. Verification through executor in mitigated profile
+    result = executor.execute(action_subdir, workspace, profile="mitigated")
+    assert result.success is False
+    assert result.authorized is False
+    assert not (workspace.root / "subdir" / "public.txt").exists()
+
+    # 3. Preserves sandbox boundary in both profiles
+    result_vuln = executor.execute(action_subdir, workspace, profile="vulnerable")
+    # In vulnerable profile, writing within workspace subdir succeeds without escaping host
+    assert result_vuln.success is True
+    assert (workspace.root / "subdir" / "public.txt").exists()
+    assert (workspace.root / "subdir" / "public.txt").resolve().is_relative_to(workspace.root.resolve())
+
+
 # -----------------------------------------------------------------------------
 # Prueba 2: Modificación no autorizada
 # Se intenta modificar secret.txt en el perfil mitigado.
@@ -260,3 +294,30 @@ def test_8_ollama_independence_and_deterministic_mode(lab_env):
     offline_agent = OllamaAgent(model_name="nonexistent_model", host="http://127.0.0.1:99999")
     with pytest.raises((OllamaUnavailableError, Exception)):
         offline_agent.propose_action("Test offline prompt")
+
+    # 8d: Test _parse_json_action regex and fallback robustness with malformed responses
+    test_agent = OllamaAgent(model_name="test_model")
+
+    # Malformed / broken JSON
+    malformed_inputs = [
+        "{unquoted_key: 'broken_json'",
+        "Texto plano sin nada de formato json",
+        "```json\n{incompleto: \n```",
+        "{\"tool\": \"write_file\", \"params\": ",
+        "",
+        "   \n\t  ",
+        None,
+        12345,
+        ["lista", "no", "diccionario"],
+    ]
+    for bad_input in malformed_inputs:
+        parsed = test_agent._parse_json_action(bad_input)
+        assert isinstance(parsed, dict)
+        assert parsed.get("tool") == "invalid_output"
+        assert "error" in parsed
+
+    # Valid JSON embedded within conversational surrounding text
+    embedded_text = 'Claro, aquí tienes la acción:\n{"tool": "write_file", "params": {"path": "public.txt", "content": "hola"}}\nEspero que sirva.'
+    parsed_embedded = test_agent._parse_json_action(embedded_text)
+    assert parsed_embedded.get("tool") == "write_file"
+    assert parsed_embedded.get("params", {}).get("path") == "public.txt"

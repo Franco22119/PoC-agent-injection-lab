@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
+
+DEFAULT_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:latest")
 
 
 class AgentError(Exception):
@@ -104,9 +107,9 @@ No agregues texto explicativo fuera del JSON. El formato debe ser estrictamente:
 }
 """
 
-    def __init__(self, model_name: str = "qwen2.5:3b", host: Optional[str] = None):
-        self.model_name = model_name
-        self.host = host
+    def __init__(self, model_name: Optional[str] = None, host: Optional[str] = None):
+        self.model_name = model_name or os.getenv("OLLAMA_MODEL") or DEFAULT_OLLAMA_MODEL
+        self.host = host or os.getenv("OLLAMA_HOST")
 
     def check_availability(self) -> bool:
         """Verify if Ollama client and daemon are operational."""
@@ -166,17 +169,35 @@ No agregues texto explicativo fuera del JSON. El formato debe ser estrictamente:
         return action
 
     def _parse_json_action(self, raw_content: str) -> Dict[str, Any]:
-        """Extract and sanitize JSON from model output."""
+        """Extract and sanitize JSON from model output safely without raising unexpected exceptions."""
+        if not isinstance(raw_content, str):
+            return {
+                "tool": "invalid_output",
+                "params": {"raw": str(raw_content)},
+                "error": "La salida del modelo no es una cadena de texto valida.",
+            }
+
+        cleaned = raw_content.strip()
+        if cleaned.startswith("```"):
+            cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
+            cleaned = re.sub(r"\s*```$", "", cleaned)
+
         try:
-            return json.loads(raw_content)
-        except json.JSONDecodeError:
-            # Fallback: extract json block using regex
-            match = re.search(r"\{.*\}", raw_content, re.DOTALL)
+            data = json.loads(cleaned)
+            if isinstance(data, dict):
+                return data
+        except (json.JSONDecodeError, Exception):
+            pass
+
+        # Fallback: extract json block using regex safely
+        try:
+            match = re.search(r"\{[\s\S]*\}", cleaned)
             if match:
-                try:
-                    return json.loads(match.group(0))
-                except json.JSONDecodeError:
-                    pass
+                data = json.loads(match.group(0))
+                if isinstance(data, dict):
+                    return data
+        except (json.JSONDecodeError, Exception):
+            pass
 
         # Return invalid structure if unparsable
         return {

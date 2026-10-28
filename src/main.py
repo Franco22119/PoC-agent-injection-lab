@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Dict, Any, List, Optional
@@ -125,11 +126,14 @@ def run_demo(
     mode: str = "deterministic",
     profiles: Optional[List[str]] = None,
     issues: Optional[List[str]] = None,
-    model_name: str = "qwen2.5:3b",
+    model_name: Optional[str] = None,
     workspace_path: Optional[Path] = None,
 ) -> int:
     """Run demonstration with comparative analysis."""
     print_banner()
+
+    default_model = os.getenv("OLLAMA_MODEL", "llama3.2:latest")
+    model_name = model_name or default_model
 
     profiles = profiles or ["vulnerable", "mitigated"]
     issues = issues or ["benign", "malicious"]
@@ -226,10 +230,11 @@ def main() -> None:
         default="all",
         help="Tipo de issue a procesar: 'benign', 'malicious' o 'all'.",
     )
+    default_model = os.getenv("OLLAMA_MODEL", "llama3.2:latest")
     parser.add_argument(
         "--model",
-        default="qwen2.5:3b",
-        help="Nombre del modelo Ollama (solo en modo ollama, defecto: qwen2.5:3b).",
+        default=default_model,
+        help=f"Nombre del modelo Ollama (defecto: '{default_model}' o variable de entorno OLLAMA_MODEL).",
     )
     parser.add_argument(
         "--run-tests",

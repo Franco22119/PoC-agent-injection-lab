@@ -67,15 +67,15 @@ flowchart TD
 ```
 
 ### Componentes del repositorio
-- [`src/agent.py`](file:///c:/Users/Rorro/Desktop/Seguridad/PoC-agent-injection-lab/src/agent.py): Implementa el agente en dos modalidades:
+- [`src/agent.py`](src/agent.py): Implementa el agente en dos modalidades:
   - `DeterministicAgent`: Generador predecible y reproducible sin dependencias de IA.
-  - `OllamaAgent`: Integración con LLM local (`qwen2.5:3b`) mediante salida estructurada JSON.
-- [`src/security.py`](file:///c:/Users/Rorro/Desktop/Seguridad/PoC-agent-injection-lab/src/security.py):
-  - `SecurityController`: Valida operaciones contra listas blancas, verifica esquemas de parámetros, comprueba contención de rutas y prohíbe modificaciones sobre archivos protegidos.
+  - `OllamaAgent`: Integración con LLM local (`llama3.2:latest`) mediante salida estructurada JSON.
+- [`src/security.py`](src/security.py):
+  - `SecurityController`: Valida operaciones contra listas blancas, verifica esquemas de parámetros, comprueba contención de rutas relativas exactas y prohíbe modificaciones sobre archivos protegidos.
   - `ActionExecutor`: Ejecuta las herramientas bajo el perfil vulnerable o mitigado.
-- [`src/tools.py`](file:///c:/Users/Rorro/Desktop/Seguridad/PoC-agent-injection-lab/src/tools.py): Operaciones de archivo seguras (`read_file`, `write_file`) y validación estricta de contención dentro del espacio de trabajo (`resolve_safe_path`).
-- [`src/audit.py`](file:///c:/Users/Rorro/Desktop/Seguridad/PoC-agent-injection-lab/src/audit.py): Registrador de eventos de seguridad y generador de métricas.
-- [`src/main.py`](file:///c:/Users/Rorro/Desktop/Seguridad/PoC-agent-injection-lab/src/main.py): Interfaz CLI de control y demostración.
+- [`src/tools.py`](src/tools.py): Operaciones de archivo seguras (`read_file`, `write_file`) y validación estricta de contención dentro del espacio de trabajo (`resolve_safe_path`).
+- [`src/audit.py`](src/audit.py): Registrador de eventos de seguridad y generador de métricas.
+- [`src/main.py`](src/main.py): Interfaz CLI de control y demostración.
 
 ---
 
@@ -150,40 +150,55 @@ ollama serve
 
 ## 8. Comando para descargar el modelo recomendado
 
-El modelo sugerido por defecto para este laboratorio es `qwen2.5:3b`, por su equilibrio entre requerimientos de cómputo y compatibilidad con generación estructurada:
+El modelo validado experimentalmente por defecto para este laboratorio es `llama3.2:latest` (o `qwen2.5:3b`), por su equilibrio entre requerimientos de cómputo y compatibilidad con generación estructurada JSON:
 
 ```bash
-ollama pull qwen2.5:3b
+ollama pull llama3.2:latest
 ```
+
+También es posible definir el modelo mediante la variable de entorno `OLLAMA_MODEL`:
+- En PowerShell: `$env:OLLAMA_MODEL="llama3.2:latest"`
+- En Bash: `export OLLAMA_MODEL="llama3.2:latest"`
 
 ---
 
 ## 9. Instrucciones para ejecutar el modo con Ollama
 
-Una vez que Ollama esté corriendo con el modelo descargado:
+Una vez que Ollama esté corriendo con el modelo disponible:
 
 ```bash
 python -m src.main --mode ollama --profile both --issue all
 ```
 
-Si deseas evaluar con un modelo diferente previamente descargado en Ollama (ej. `llama3.2:3b` o `mistral`):
+Si deseas evaluar con un modelo diferente previamente descargado en Ollama (ej. `qwen2.5:3b` o `mistral`):
 
 ```bash
-python -m src.main --mode ollama --model llama3.2:3b
+python -m src.main --mode ollama --model qwen2.5:3b
 ```
 
-> [!NOTE]
-> Si el modelo decide no obedecer la inyección del issue, el sistema registrará la propuesta real del modelo sin adulterar el resultado.
+Para ejecutar ensayos experimentales de repetibilidad (ej. 3 repeticiones consecutivas):
+
+```bash
+python scripts/run_experiments.py 3
+```
 
 ---
 
 ## 10. Comando para ejecutar las pruebas automatizadas
 
-Las pruebas automatizadas cubren los 8 escenarios mínimos de seguridad requeridos por la especificación:
+La suite de pruebas se divide en dos módulos claramente separados:
 
+### A. Pruebas unitarias de seguridad (Independientes de Ollama, 100% reproducibles):
 ```bash
-pytest -v
+pytest -v tests/test_security.py
 ```
+*Cubre los 8 escenarios fundamentales requeridos por la especificación (16 casos ejecutados).*
+
+### B. Pruebas de integración con LLM local real (Requiere Ollama activo):
+```bash
+pytest -v tests/test_ollama_integration.py
+```
+*Verifica la conectividad con el modelo real, la inferencia sobre el caso benigno y el bloqueo obligatorio en el perfil mitigado.*
 
 O a través de la CLI del proyecto:
 

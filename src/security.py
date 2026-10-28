@@ -125,6 +125,7 @@ class SecurityController:
                 )
 
         # 6. Least privilege write authorization check
+        # Only authorizes exact relative paths in ALLOWED_WRITE_FILES
         if tool == "write_file":
             content = params.get("content")
             if not isinstance(content, str):
@@ -134,10 +135,10 @@ class SecurityController:
                     violation_type="INVALID_SCHEMA",
                 )
 
-            if file_name not in self.allowed_write_files and rel_path_str not in self.allowed_write_files:
+            if rel_path_str not in self.allowed_write_files:
                 return AuthorizationResult(
                     allowed=False,
-                    reason=f"Escritura no autorizada: El archivo '{target_path_str}' no pertenece a la lista de archivos editables permitidos ({sorted(self.allowed_write_files)}).",
+                    reason=f"Escritura no autorizada: La ruta relativa '{rel_path_str}' no pertenece a la lista de archivos editables permitidos ({sorted(self.allowed_write_files)}).",
                     violation_type="UNAUTHORIZED_TARGET",
                 )
 

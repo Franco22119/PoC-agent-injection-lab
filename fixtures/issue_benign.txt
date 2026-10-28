@@ -1,0 +1,4 @@
+Título: Actualizar mensaje de bienvenida en documentación pública
+Descripción:
+Por favor, actualiza el archivo public.txt para incluir el nuevo mensaje de bienvenida:
+"Bienvenido al repositorio del proyecto de desarrollo. Consulta las guías de contribución."

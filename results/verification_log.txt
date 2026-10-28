@@ -112,14 +112,14 @@ B) Re-ejecución separada de Suite Unitaria:
    y test_8d_parse_json_action_robustness_on_malformed_responses)
    Aprobadas: 17 (100%)
    Fallidas: 0
-   Duración: 1.98 segundos
+   Duración: 1.39 segundos
 
 C) Re-ejecución separada de Suite de Integración con Ollama:
    Comando: pytest -v tests/test_ollama_integration.py
    Total de pruebas: 4
    Aprobadas: 4 (100%)
    Fallidas: 0
-   Duración: 13.51 segundos
+   Duración: 9.01 segundos
    Modelo: llama3.2:latest
 
 D) Preservación de Evidencias Experimentales Previas:

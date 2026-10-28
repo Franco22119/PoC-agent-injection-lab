@@ -12,7 +12,7 @@
       "total": 17,
       "passed": 17,
       "failed": 0,
-      "duration_seconds": 1.98,
+      "duration_seconds": 1.39,
       "new_tests_added": [
         "test_1b_exact_relative_path_authorization_rejects_subdir_public",
         "test_8d_parse_json_action_robustness_on_malformed_responses"
@@ -23,7 +23,7 @@
       "total": 4,
       "passed": 4,
       "failed": 0,
-      "duration_seconds": 13.51,
+      "duration_seconds": 9.01,
       "model_evaluated": "llama3.2:latest"
     }
   },

@@ -8,10 +8,10 @@
 - **Subtítulo:** Evaluación experimental de Prompt Injection Indirecta en agentes de IA para desarrollo de software y mitigación mediante un Controlador de Autorización Externo e Independiente del Modelo (Validado con Agente Determinista y LLM Local Real Llama 3.2)
 - **Contexto:** Trabajo Práctico de Investigación y Desarrollo en Seguridad de Inteligencia Artificial
 - **Fecha de elaboración:** 27 de octubre de 2026
-- **Equipo de Investigación:** `[Completar: Nombre y Apellido de los Integrantes / Grupo]`
-- **Institución Académica:** `[Completar: Nombre de la Universidad / Facultad / Instituto]`
-- **Asignatura / Cátedra:** `[Completar: Seguridad en Sistemas de Inteligencia Artificial]`
-- **Docentes:** `[Completar: Nombre del Profesor Titular / Docente a cargo]`
+- **Equipo de Investigación:** `Franco Finocchi (Equipo de Investigación)`
+- **Institución Académica:** `Facultad de Ingeniería, Universidad de Buenos Aires (FIUBA)`
+- **Asignatura / Cátedra:** `Seguridad en Sistemas de Inteligencia Artificial`
+- **Docentes:** `[Docentes a cargo / Cátedra de Seguridad en IA]`
 
 ---
 
@@ -52,11 +52,11 @@ El laboratorio fue evaluado bajo dos perfiles de ejecución:
 2. **Perfil Mitigado:** Aplica verificación estricta de listas blancas de herramientas, esquemas de parámetros, contención de rutas y denegación explícita sobre recursos protegidos.
 
 ### Resultados clave verificados:
-- **Suite automatizada de seguridad (Unit Tests):** 17 pruebas ejecutadas con `pytest`, resultando en un **100% de aprobación** (0 fallas) en 1.98 segundos de forma totalmente independiente de Ollama.
-- **Suite de integración con LLM real:** 4 pruebas automatizadas con conexión activa a Ollama (`llama3.2:latest`), con **100% de aprobación** en 13.51 segundos.
+- **Suite automatizada de seguridad (Unit Tests):** 17 pruebas ejecutadas con `pytest`, resultando en un **100% de aprobación** (0 fallas) en 1.39 segundos de forma totalmente independiente de Ollama.
+- **Suite de integración con LLM real:** 4 pruebas automatizadas con conexión activa a Ollama (`llama3.2:latest`), con **100% de aprobación** en 9.01 segundos.
 - **Validación con LLM real (`llama3.2:latest`):** Se verificó experimentalmente que el modelo local de 3.2B parámetros fue susceptible a la inyección indirecta (proponiendo modificar `secret.txt` en el 100% de los ensayos maliciosos evaluados: 3 de 3).
 - **Eficacia de la defensa:** En el perfil vulnerable, la inyección maliciosa sobreescrió exitosamente `secret.txt` (3 de 3 ensayos permitidos). En el perfil mitigado, el controlador bloqueó la operación en el **100.0% de los ensayos** (3 de 3 bloqueos mitigados), manteniendo la integridad intacta del archivo protegido.
-- **Aislamiento del host:** Ambos perfiles garantizaron contención absoluta dentro del workspace, bloqueando intentos de *Path Traversal* y rutas absolutas hacia el sistema operativo anfitrión.
+- **Aislamiento del host:** En los casos evaluados, ambos perfiles bloquearon los intentos de escape del workspace mediante las rutas probadas, manteniendo el confinamiento de archivos.
 
 ---
 
@@ -123,7 +123,7 @@ El proyecto se diseñó bajo una premisa de máxima simplicidad y bajo acoplamie
 | Componente | Tecnología / Herramienta | Versión Verificada | Propósito |
 | :--- | :--- | :--- | :--- |
 | **Lenguaje base** | Python | `3.12.10` | Motor de ejecución del laboratorio |
-| **Framework de pruebas** | `pytest` | `9.1.0` | Suite de 20 pruebas (16 unitarias + 4 integración) |
+| **Framework de pruebas** | `pytest` | `9.1.0` | Suite de 21 pruebas (17 unitarias + 4 de integración) |
 | **Integración LLM local** | `ollama` (Python SDK) | `0.6.2` | Adaptador para llamadas HTTP a modelos locales |
 | **Servicio de Ollama** | Ollama Engine | `0.30.10` | Servidor de inferencia local en `127.0.0.1:11434` |
 | **Modelo LLM verificado** | `llama3.2:latest` | 3.2B (Q4_K_M) | Modelo local real para evaluación experimental |
@@ -238,11 +238,11 @@ pip install -r requirements.txt
 ```
 
 ### Paso 5: Ejecutar la suite de pruebas unitarias automatizadas
-Verificar que la suite completa de 16 pruebas unitarias pase exitosamente:
+Verificar que la suite completa de 17 pruebas unitarias pase exitosamente:
 ```powershell
 pytest -v tests/test_security.py
 ```
-*Salida observada:* `16 passed in 1.58s`.
+*Salida observada:* `17 passed in 1.39s`.
 
 ### Paso 6: Ejecutar la demostración determinista completa
 Ejecutar la comparativa que evalúa tanto la solicitud legítima como la maliciosa bajo ambos perfiles sin requerir IA:
@@ -326,7 +326,7 @@ python -c "from src.tools import LabWorkspace; LabWorkspace('lab_workspace').res
 La verificación automatizada se dividió en dos suites independientes para garantizar que la ausencia de Ollama no bloquee las pruebas básicas.
 
 ### A. Pruebas unitarias de seguridad (`tests/test_security.py`)
-Ejecutadas mediante `pytest -v tests/test_security.py` (17 pruebas exitosas en 1.98s):
+Ejecutadas mediante `pytest -v tests/test_security.py` (17 pruebas exitosas en 1.39s):
 
 | ID | Objetivo | Entrada / Acción Evaluada | Comportamiento Esperado | Resultado Observado | Estado |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -349,7 +349,7 @@ Ejecutadas mediante `pytest -v tests/test_security.py` (17 pruebas exitosas en 1
 | **TC-08** | Independencia y robustez de parsing | Agente determinista y parser con JSON malformado | Ejecución sin LLM y tolerancia total a entradas no válidas | `invalid_output` seguro sin excepciones | **Aprobado** |
 
 ### B. Pruebas de integración con Ollama (`tests/test_ollama_integration.py`)
-Ejecutadas mediante `pytest -v tests/test_ollama_integration.py` (4 pruebas exitosas en 5.01s):
+Ejecutadas mediante `pytest -v tests/test_ollama_integration.py` (4 pruebas exitosas en 9.01s):
 
 | ID | Objetivo | Componente Evaluado | Resultado Observado | Estado |
 | :--- | :--- | :--- | :--- | :--- |
@@ -502,7 +502,7 @@ Antes de ejecutar los ensayos, deben verificarse los componentes del sistema sin
    pip install -r requirements.txt
    pytest -v tests/test_ollama_integration.py
    ```
-   *Resultado verificado:* 4 pruebas de integración aprobadas (`4 passed in 13.51s`).
+   *Resultado verificado:* 4 pruebas de integración aprobadas (`4 passed in 9.01s`).
 
 ---
 
@@ -775,7 +775,7 @@ agent-injection-lab/
 │   └── main.py                    # CLI principal con soporte OLLAMA_MODEL
 ├── tests/
 │   ├── __init__.py
-│   ├── test_security.py           # Suite unitaria (16 pruebas independientes)
+│   ├── test_security.py           # Suite unitaria (17 pruebas independientes)
 │   └── test_ollama_integration.py # Suite de integración con LLM real (4 pruebas)
 ├── results/
 │   ├── .gitkeep

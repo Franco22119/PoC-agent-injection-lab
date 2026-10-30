@@ -10,8 +10,7 @@
 - **Fecha de elaboración:** 27 de octubre de 2026
 - **Equipo de Investigación:** `Franco Finocchi (Equipo de Investigación)`
 - **Institución Académica:** `Facultad de Ingeniería, Universidad de Buenos Aires (FIUBA)`
-- **Asignatura / Cátedra:** `Seguridad en Sistemas de Inteligencia Artificial`
-- **Docentes:** `[Docentes a cargo / Cátedra de Seguridad en IA]`
+- **Asignatura / Cátedra:** `TALLER DE SEGURIDAD INFORMATICA`
 
 ---
 

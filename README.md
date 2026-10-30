@@ -7,6 +7,8 @@ Prueba de concepto (PoC) académica para la evaluación y mitigación de **Promp
 
 Este trabajo es un proyecto academico para la materia TALLER DE SEGURIDAD INFORMATICA/CIBERSEGURIDADDE REDES E INFRAESTRUCTURAS CRITICAS en el periodo de cursada segundo cuatrimestre 2026, organizado y propuesto por el grupo numero 4.
 
+---
+
 ## 1. Objetivo y contexto académico
 
 Este proyecto forma parte de un trabajo práctico sobre seguridad en sistemas de Inteligencia Artificial, inspirado en la presentación *"Tu agente tiene shell"* de Ramiro Besse (Root Secure).

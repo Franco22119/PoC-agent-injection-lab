@@ -3,6 +3,9 @@
 Prueba de concepto (PoC) académica para la evaluación y mitigación de **Prompt Injection Indirecta** en agentes de Inteligencia Artificial con acceso a herramientas mediante un **Controlador de Autorización Independiente del Modelo**.
 
 ---
+## Disclaimer
+
+Este trabajo es un proyecto academico para la materia TALLER DE SEGURIDAD INFORMATICA/CIBERSEGURIDADDE REDES E INFRAESTRUCTURAS CRITICAS en el periodo de cursada segundo cuatrimestre 2026, organizado y propuesto por el grupo numero 4.
 
 ## 1. Objetivo y contexto académico
 

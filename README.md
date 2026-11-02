@@ -79,18 +79,3 @@ El agente procesa exactamente el mismo contexto y la misma entrada. Antes de inv
 ```bash
 python seguro.py
 ```
-
----
-
-## 5. Comparativa de Controles de Seguridad
-
-| Dimensión de Seguridad | Escenario Inseguro (`inseguro.py`) | Escenario Seguro (`seguro.py`) |
-| :--- | :---: | :---: |
-| **Confinamiento en `lab_workspace/`** | Sí (impide Path Traversal hacia el host) | Sí (impide Path Traversal hacia el host) |
-| **Validación de contrato de acción** | Sí (valida tipos JSON antes de ejecutar) | Sí (valida tipos JSON antes de autorizar) |
-| **Controlador de autorización independiente** | **No** (confianza ciega en la propuesta del LLM) | **Sí** (`autorizar_accion` desacoplada del LLM) |
-| **Política sobre `secret.txt`** | Sin restricción de negocio (ejecuta si el LLM lo pide) | **Protegido explícitamente contra escritura** |
-| **Política sobre `public.txt`** | Permitido | **Permitido (único archivo en lista blanca)** |
-| **Comportamiento ante intento de ataque** | Modificación permitida si el LLM lo propone | **Operación bloqueada en la capa de software** |
-
-> **Conclusión pedagógica:** La seguridad de un agente de IA no debe depender de que el modelo sea infalible o inmune a inyecciones. La autorización de operaciones sobre herramientas debe gestionarse mediante controles deterministas en el software independientes del LLM.

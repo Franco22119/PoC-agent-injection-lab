@@ -1,40 +1,26 @@
-# Python
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Bytecode y caches de Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-env/
-venv/
-.venv/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Testing
 .pytest_cache/
-.coverage
-htmlcov/
 
-# Local workspace runs and temporary audit outputs
+# Espacio de trabajo de laboratorio (creado dinámicamente)
 lab_workspace/
-results/*.json
-results/*.jsonl
-results/*.log
-!results/.gitkeep
-!results/verification_summary.json
-!results/ollama_experiments.json
-!results/ollama_inference.txt
-!results/verification_log.txt
+
+# Documentación de trabajo local (no versionada en Git)
+informe_poc.md
+informe_final.md
+informe_final.pdf
+*.pdf
+
+# Archivos temporales de sistema e IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

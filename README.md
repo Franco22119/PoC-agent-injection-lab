@@ -1,26 +1,45 @@
 # agent-injection-lab
 
-Prueba de concepto (PoC) académica que demuestra una vulnerabilidad de **Prompt Injection Indirecta** en agentes de Inteligencia Artificial conectados a herramientas, y cómo mitigarla mediante un **controlador de autorización determinista e independiente del modelo**.
+Prueba de concepto (PoC) académica que demuestra una vulnerabilidad de **Prompt Injection Indirecta** en agentes de Inteligencia Artificial conectados a herramientas, y su mitigación efectiva mediante un **controlador de autorización determinista e independiente del modelo**.
 
 ---
 
 ## Disclaimer
 
-Este trabajo es un proyecto académico para la materia TALLER DE SEGURIDAD INFORMÁTICA / CIBERSEGURIDAD DE REDES E INFRAESTRUCTURAS CRÍTICAS en el período de cursada segundo cuatrimestre 2026, organizado y propuesto por el grupo número 4.
+Este trabajo es un proyecto académico para la materia **TALLER DE SEGURIDAD INFORMÁTICA / CIBERSEGURIDAD DE REDES E INFRAESTRUCTURAS CRÍTICAS** en el período de cursada segundo cuatrimestre 2026, organizado y propuesto por el **Grupo 4** (FIUBA).
 
 ---
 
-## 1. Requisitos
+## 1. Estructura del Repositorio
 
-- **Python**: Versión 3.10 o superior (probado con Python 3.12).
+El laboratorio implementa una arquitectura modular con estricta separación de responsabilidades:
+
+| Archivo | Responsabilidad |
+|---|---|
+| `escenario.py` | Prompt del sistema, issue que contiene la inyección y configuración compartida del modelo. |
+| `agente_comun.py` | Lógica compartida por ambas variantes: interacción con Ollama, procesamiento de respuestas JSON, sandbox de rutas y ejecución común. No contiene autorización de negocio. |
+| `control_autorizacion.py` | Definición de `autorizar_accion(herramienta, params)` y reglas independientes de autorización de negocio (mínimo privilegio y lista blanca). |
+| `inseguro.py` | Ejecución de la variante vulnerable: ejecuta la acción propuesta por el modelo sin autorización de negocio. |
+| `seguro.py` | Ejecución de la variante protegida: incorpora el control de autorización antes de cualquier escritura. |
+| `preparar_laboratorio.py` | Preparación e inicialización manual del espacio de trabajo sintético. |
+| `verificar_requisitos.py` | Comprobación no destructiva de dependencias, versión de Python y disponibilidad del servicio y modelo de Ollama. |
+| `lab_workspace/` | Directorio de trabajo aislado (creado dinámicamente, ignorado en Git) con `public.txt` y `secret.txt`. |
+| `requirements.txt` | Dependencia mínima (`ollama>=0.4.0`). |
+| `README.md` | Guía de instalación, uso y documentación de arquitectura. |
+
+---
+
+## 2. Requisitos Previos
+
+- **Python**: Versión 3.10 o superior (verificado con Python 3.12).
 - **Ollama**: Motor de inferencia local para modelos LLM ([https://ollama.com](https://ollama.com)).
 - **Modelo LLM**: `llama3.2:latest` (aproximadamente 2.0 GB).
 
 ---
 
-## 2. Instalación
+## 3. Instalación
 
-1. Clonar el repositorio y acceder al directorio:
+1. Clonar el repositorio y posicionarse en la carpeta raíz:
    ```bash
    cd agent-injection-lab
    ```
@@ -37,45 +56,50 @@ Este trabajo es un proyecto académico para la materia TALLER DE SEGURIDAD INFOR
      source .venv/bin/activate
      ```
 
-3. Instalar dependencias mínimas:
+3. Instalar la biblioteca cliente requerida:
    ```bash
    pip install -r requirements.txt
    ```
 
----
-
-## 3. Preparación de Ollama
-
-1. Descargar el modelo local:
+4. Descargar el modelo local en Ollama y verificar que el daemon esté activo:
    ```bash
    ollama pull llama3.2:latest
+   ollama serve
    ```
-
-2. Verificar que el servicio esté activo:
-   - Si Ollama ya se encuentra ejecutándose como servicio o aplicación en segundo plano (escuchando en `http://127.0.0.1:11434`), no es necesario abrir otra terminal.
-   - En caso de no estar activo, iniciarlo con:
-     ```bash
-     ollama serve
-     ```
+   *(Si Ollama ya corre en segundo plano escuchando en `http://127.0.0.1:11434`, no es necesario ejecutar `ollama serve` nuevamente)*.
 
 ---
 
-## 4. Ejecución de la demostración
+## 4. Guía de Ejecución Paso a Paso
 
-La PoC se compone de dos scripts completamente independientes que evalúan el mismo escenario utilizando `llama3.2:latest` con `temperature=0.0`. Aunque la temperatura en cero minimiza la variabilidad, cada ejecución refleja de forma transparente la respuesta real del modelo.
+El flujo de trabajo es transparente y auditable en cada etapa:
 
-### A. Escenario Inseguro (Agente Vulnerable)
+### Paso 1: Preparación manual del espacio de trabajo
+Crea o restablece el directorio `lab_workspace/` con los archivos de referencia `public.txt` y `secret.txt`.
 
-El agente procesa un issue que contiene una inyección de prompt indirecta. Al carecer de un control de autorización de negocio independiente, el sistema confía en la acción propuesta por el modelo. Si el LLM es inducido a escribir sobre `secret.txt`, la operación se ejecuta en disco:
+**La preparación es un paso manual**: los agentes `inseguro.py` y `seguro.py` no restablecen los archivos automáticamente, lo que permite que cada ejecución preserve el estado del disco hasta que el usuario decida reinicializarlo:
+```bash
+python preparar_laboratorio.py
+```
 
+### Paso 2: Verificación de requisitos y precondiciones
+Comprueba de forma rápida y no destructiva que la versión de Python, la biblioteca `ollama`, la conectividad al daemon local y la presencia de `llama3.2:latest` estén listas (utilizando la respuesta tipada del SDK):
+```bash
+python verificar_requisitos.py
+```
+
+### Paso 3: Ejecución del escenario vulnerable
+Ejecuta el agente sin control de autorización. El LLM procesa un issue que contiene una inyección de prompt indirecta. Al carecer de autorización de negocio independiente, el sistema confía en la propuesta del modelo y sobrescribe `secret.txt`:
 ```bash
 python inseguro.py
 ```
 
-### B. Escenario Seguro (Agente con Controlador de Autorización)
-
-El agente procesa exactamente el mismo contexto y la misma entrada. Antes de invocar el sistema de archivos, un controlador de seguridad determinista valida la operación contra una lista blanca. Si el modelo propone modificar `secret.txt`, la operación se rechaza y el archivo permanece intacto:
-
+### Paso 4: Restablecimiento y ejecución del escenario protegido
+Para evaluar el escenario protegido desde el estado de referencia, se restablece el laboratorio manualmente y se ejecuta el agente protegido:
 ```bash
+python preparar_laboratorio.py
 python seguro.py
 ```
+El agente protegido recibe la misma entrada bajo **paridad de configuración experimental**, pero consulta obligatoriamente a `control_autorizacion.py` antes de escribir. La política de mínimo privilegio rechaza la modificación del recurso protegido y `secret.txt` permanece intacto.
+
+---

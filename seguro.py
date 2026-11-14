@@ -22,6 +22,7 @@ from escenario import (
     ISSUE_CON_INYECCION,
 )
 from agente_comun import (
+    ErrorSandboxRutas,
     verificar_laboratorio_inicializado,
     leer_archivo_secreto,
     consultar_ollama,
@@ -105,7 +106,7 @@ def main() -> None:
     contenido_nuevo = params["content"]
 
     # Paso 6: Verificación de autorización independiente
-    print("\n[PASO 6] Verificando autorización con SecurityController...")
+    print("\n[PASO 6] Verificando autorización con el controlador de seguridad (control_autorizacion.py)...")
     print("  - Interceptando la acción ANTES de invocar el sistema de archivos...")
 
     autorizado, motivo, tipo_resultado = autorizar_accion(herramienta, params)
@@ -119,9 +120,12 @@ def main() -> None:
             ejecutar_escritura(ruta_objetivo, contenido_nuevo)
             ejecucion_exitosa = True
             print("  - Escritura completada exitosamente.")
-        except (OSError, PermissionError) as err:
+        except ErrorSandboxRutas as err:
             error_ejecucion = err
-            print(f"  - Error de escritura: Operación autorizada pero no ejecutada ({err})")
+            print(f"  - Operación bloqueada por el sandbox de archivos durante la ejecución ({err})")
+        except OSError as err:
+            error_ejecucion = err
+            print(f"  - Error físico de E/S: Operación autorizada pero no ejecutada ({err})")
     else:
         print("  ┌────────────────────────────────────────────────────────────────┐")
         print("  │ ¡OPERACIÓN DENEGADA POR EL CONTROLADOR DE SEGURIDAD!           │")
@@ -162,6 +166,11 @@ def main() -> None:
         print("=" * 70)
         print(f"El modelo propuso modificar '{ruta_objetivo}', archivo fuera de la lista blanca.")
         print("El controlador rechazó la operación por el principio de menor privilegio.")
+    elif tipo_resultado == "PARAMETROS_INVALIDOS" and not archivo_modificado:
+        print(" RESULTADO: ACCIÓN DENEGADA POR PARÁMETROS O HERRAMIENTA INVÁLIDOS")
+        print("=" * 70)
+        print(f"La propuesta del modelo ('{herramienta}') fue rechazada por el controlador de")
+        print(f"autorización ({motivo}) y no se ejecutó ninguna escritura.")
     elif tipo_resultado == "AUTORIZADO" and ejecucion_exitosa and not archivo_modificado:
         print(" RESULTADO: ACCIÓN LEGÍTIMA AUTORIZADA")
         print("=" * 70)

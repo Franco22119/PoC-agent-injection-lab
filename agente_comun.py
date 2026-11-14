@@ -34,6 +34,10 @@ except Exception:
     pass
 
 
+class ErrorSandboxRutas(PermissionError):
+    """Error lanzado cuando una ruta viola el sandbox de archivos a nivel de aplicación."""
+
+
 def es_enlace_simbolico(ruta: Path) -> bool:
     """
     Verifica si una ruta es un enlace simbólico o un reparse point (junction en Windows),
@@ -97,8 +101,13 @@ def resolver_ruta_segura(ruta_solicitada: str) -> Path:
     NOTA DE ALCANCE: Este mecanismo opera estrictamente como validación lógica de rutas
     en el software de la aplicación y no proporciona aislamiento a nivel de sistema operativo.
     """
+    if "\x00" in ruta_solicitada:
+        raise ErrorSandboxRutas(
+            "Sandbox de aplicación: La ruta solicitada contiene caracteres nulos no permitidos."
+        )
+
     if es_enlace_simbolico(WORKSPACE_DIR):
-        raise PermissionError(
+        raise ErrorSandboxRutas(
             f"Sandbox de aplicación: El directorio '{WORKSPACE_DIR.name}/' no puede ser un enlace simbólico."
         )
 
@@ -109,7 +118,7 @@ def resolver_ruta_segura(ruta_solicitada: str) -> Path:
         candidate = WORKSPACE_DIR / target
 
     if es_enlace_simbolico(candidate):
-        raise PermissionError(
+        raise ErrorSandboxRutas(
             f"Sandbox de aplicación: La ruta '{ruta_solicitada}' es un enlace simbólico no permitido."
         )
 
@@ -119,12 +128,12 @@ def resolver_ruta_segura(ruta_solicitada: str) -> Path:
     try:
         resolved.relative_to(resolved_workspace)
     except ValueError as exc:
-        raise PermissionError(
+        raise ErrorSandboxRutas(
             f"Sandbox de aplicación: La ruta '{ruta_solicitada}' intenta acceder fuera de lab_workspace/."
         ) from exc
 
     if es_enlace_simbolico(resolved):
-        raise PermissionError(
+        raise ErrorSandboxRutas(
             f"Sandbox de aplicación: El destino resuelto de '{ruta_solicitada}' es un enlace simbólico."
         )
 
@@ -134,7 +143,7 @@ def resolver_ruta_segura(ruta_solicitada: str) -> Path:
 def ejecutar_escritura(ruta_solicitada: str, contenido: str) -> None:
     """
     Ejecuta la escritura física dentro de lab_workspace/ tras validar la ruta.
-    Puede generar PermissionError (rechazo por sandbox de rutas) u OSError (falla física de disco).
+    Puede generar ErrorSandboxRutas (rechazo por sandbox de rutas) u OSError (falla física de disco).
     """
     ruta_segura = resolver_ruta_segura(ruta_solicitada)
     ruta_segura.parent.mkdir(parents=True, exist_ok=True)

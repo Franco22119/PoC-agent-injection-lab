@@ -22,6 +22,7 @@ from escenario import (
     ISSUE_CON_INYECCION,
 )
 from agente_comun import (
+    ErrorSandboxRutas,
     verificar_laboratorio_inicializado,
     leer_archivo_secreto,
     consultar_ollama,
@@ -118,7 +119,7 @@ def main() -> None:
             ejecutar_escritura(ruta_objetivo, contenido_nuevo)
             escritura_exitosa = True
             print(f"  - Escritura realizada correctamente sobre '{ruta_objetivo}'.")
-        except PermissionError as err:
+        except ErrorSandboxRutas as err:
             bloqueado_por_sandbox = True
             print(f"  - Operación bloqueada por el sandbox de archivos (validación de rutas): {err}")
         except OSError as err:

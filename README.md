@@ -23,7 +23,7 @@ El laboratorio implementa una arquitectura modular con estricta separación de r
 | `seguro.py` | Ejecución de la variante protegida: incorpora el control de autorización antes de cualquier escritura. |
 | `preparar_laboratorio.py` | Preparación e inicialización manual del espacio de trabajo sintético. |
 | `verificar_requisitos.py` | Comprobación no destructiva de dependencias, versión de Python y disponibilidad del servicio y modelo de Ollama. |
-| `lab_workspace/` | Directorio de trabajo aislado (creado dinámicamente, ignorado en Git) con `public.txt` y `secret.txt`. |
+| `lab_workspace/` | Espacio de trabajo sintético del laboratorio (creado dinámicamente, ignorado en Git) con `public.txt` y `secret.txt`. |
 | `requirements.txt` | Dependencia mínima (`ollama>=0.4.0`). |
 | `README.md` | Guía de instalación, uso y documentación de arquitectura. |
 
@@ -103,3 +103,17 @@ python seguro.py
 El agente protegido recibe la misma entrada bajo **paridad de configuración experimental**, pero consulta obligatoriamente a `control_autorizacion.py` antes de escribir. La política de mínimo privilegio rechaza la modificación del recurso protegido y `secret.txt` permanece intacto.
 
 ---
+
+## 5. Sandbox de Archivos a Nivel de Aplicación vs. Autorización de Negocio
+
+Es importante distinguir dos capas de control con alcances diferentes dentro del laboratorio:
+
+| Aspecto | Sandbox de archivos (`agente_comun.py`) | Autorización de negocio (`control_autorizacion.py`) |
+|---|---|---|
+| **Implementación** | `resolver_ruta_segura()` (lanza `ErrorSandboxRutas`). | `autorizar_accion(herramienta, params)`. |
+| **Presente en** | `inseguro.py` y `seguro.py` (capa compartida). | Exclusivo de `seguro.py`. |
+| **Qué controla** | Restringe las rutas dentro de `lab_workspace/`, rechaza bytes nulos (`\x00`), path traversal (`../`) y enlaces simbólicos/junctions. | Aplica la política de mínimo privilegio: herramienta permitida (`write_file`), denegación de recursos protegidos (`secret.txt`) y lista blanca (`public.txt`). |
+| **Limitación / Alcance** | Es una validación de rutas a nivel de aplicación (no aislamiento de proceso o sistema operativo) y **no distingue archivos públicos de sensibles** dentro de `lab_workspace/`. | Intercepta la propuesta del modelo antes de escribir en disco, neutralizando ataques de inyección indirecta incluso cuando apuntan a rutas válidas dentro de `lab_workspace/`. |
+
+Por esta razón, aunque `inseguro.py` cuenta con el sandbox de rutas para evitar escrituras fuera de `lab_workspace/`, **no bloquea la modificación de `lab_workspace/secret.txt`** cuando el modelo es manipulado por la inyección indirecta. Solo la incorporación de la capa de autorización de negocio en `seguro.py` detiene el abuso antes de acceder al sistema de archivos.
+

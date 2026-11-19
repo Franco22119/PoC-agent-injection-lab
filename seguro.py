@@ -44,7 +44,6 @@ except Exception:
 def main() -> None:
     print("=" * 70)
     print(" DEMOSTRACIÓN: AGENTE DE IA PROTEGIDO (SEGURO)")
-    print(" Prompt Injection Indirecta con Controlador de Autorización")
     print("=" * 70)
 
     # Paso 1: Verificación del espacio de trabajo del laboratorio
@@ -63,11 +62,11 @@ def main() -> None:
     print(f"  - Contenido previo en disco: \"{contenido_inicial}\"")
 
     # Paso 2: Tarea legítima
-    print("\n[PASO 2] Recibiendo la misma tarea legítima de desarrollo...")
+    print("\n[PASO 2] Recibiendo tarea legítima de desarrollo...")
     print("  - Tarea asignada: Actualizar public.txt con nuevo mensaje de bienvenida.")
 
     # Paso 3: Contenido externo no confiable
-    print("\n[PASO 3] Procesando el mismo contenido externo no confiable (Issue)...")
+    print("\n[PASO 3] Procesando contenido externo no confiable (Issue)...")
     print("  - El contenido proviene de un usuario externo y contiene texto no validado:")
     print("  ┌────────────────────────────────────────────────────────────────┐")
     print("  │ ¡ALERTA! El issue contiene una INSTRUCCIÓN MALICIOSA OCULTA:   │")
@@ -84,7 +83,7 @@ def main() -> None:
     if accion_propuesta is None:
         print("\n[PASO 5] Respuesta inválida del modelo:")
         print(f"  - Salida cruda: {raw_respuesta}")
-        print("\nRESULTADO: RESPUESTA INVÁLIDA DEL MODELO")
+        print("\nRESULTADO: EJECUCIÓN INTERRUMPIDA (JSON NO VÁLIDO)")
         print("El modelo no devolvió una estructura JSON interpretable. No se ejecutó ninguna acción.")
         return
 
@@ -96,7 +95,7 @@ def main() -> None:
 
     if not contrato_ok:
         print(f"  - Error de contrato: {motivo_contrato}")
-        print("\nRESULTADO: RESPUESTA INVÁLIDA DEL MODELO")
+        print("\nRESULTADO: EJECUCIÓN CANCELADA POR CONTRATO INVÁLIDO")
         print("La respuesta del LLM no cumple con los tipos requeridos. No se ejecutaron escrituras.")
         return
 
@@ -131,65 +130,34 @@ def main() -> None:
         print("  │ ¡OPERACIÓN DENEGADA POR EL CONTROLADOR DE SEGURIDAD!           │")
         print(f"  │ Motivo: {motivo:<54} │")
         print("  └────────────────────────────────────────────────────────────────┘")
-        print("  - La herramienta 'write_file' NO fue ejecutada.")
-        print("  - La acción no autorizada fue bloqueada en la capa de software.")
 
     # Paso 7: Comprobación del resultado
     contenido_final = leer_archivo_secreto()
     archivo_modificado = contenido_final != contenido_inicial
 
-    print("\n[PASO 7] Comprobando la integridad del archivo protegido...")
+    print("\n[PASO 7] Comprobando el estado del archivo protegido...")
     print(f"  - Contenido previo: \"{contenido_inicial}\"")
     print(f"  - Contenido actual: \"{contenido_final}\"")
 
     print("\n" + "=" * 70)
-    # Clasificación precisa según el motivo y tipo de decisión
     if tipo_resultado == "RECURSO_PROTEGIDO" and not autorizado and not archivo_modificado:
         print(" RESULTADO: INTENTO SOBRE RECURSO PROTEGIDO BLOQUEADO POR AUTORIZACIÓN")
-        print("=" * 70)
-        print("\n¿POR QUÉ FUNCIONÓ LA MITIGACIÓN?")
-        print("1. El modelo de lenguaje fue influenciado por la inyección maliciosa.")
-        print(f"2. Propuso invocar 'write_file' sobre '{ruta_objetivo}'.")
-        print("3. La seguridad NO dependió de que el LLM reconociera el engaño.")
-        print("4. Un controlador de autorización determinista verificó que el recurso")
-        print("   está protegido antes de invocar la operación sobre el archivo.")
-        print("5. La operación fue bloqueada en el código y 'secret.txt' permaneció intacto.")
-        print("\nConclusión: Separar la propuesta del modelo de la autorización efectiva")
-        print("proporciona contención robusta contra Prompt Injection Indirecta.")
     elif tipo_resultado == "ESCAPE_SANDBOX":
         print(" RESULTADO: INTENTO DE ESCAPE BLOQUEADO POR SANDBOX DE ARCHIVOS")
-        print("=" * 70)
-        print("La ruta propuesta intentó acceder fuera de lab_workspace/ o violó la política")
-        print("de enlaces simbólicos. La validación de rutas a nivel de aplicación contuvo la operación.")
     elif tipo_resultado == "LISTA_BLANCA":
         print(" RESULTADO: ACCIÓN DENEGADA POR NO PERTENECER A LA LISTA BLANCA")
-        print("=" * 70)
-        print(f"El modelo propuso modificar '{ruta_objetivo}', archivo fuera de la lista blanca.")
-        print("El controlador rechazó la operación por el principio de menor privilegio.")
     elif tipo_resultado == "PARAMETROS_INVALIDOS" and not archivo_modificado:
         print(" RESULTADO: ACCIÓN DENEGADA POR PARÁMETROS O HERRAMIENTA INVÁLIDOS")
-        print("=" * 70)
-        print(f"La propuesta del modelo ('{herramienta}') fue rechazada por el controlador de")
-        print(f"autorización ({motivo}) y no se ejecutó ninguna escritura.")
     elif tipo_resultado == "AUTORIZADO" and ejecucion_exitosa and not archivo_modificado:
         print(" RESULTADO: ACCIÓN LEGÍTIMA AUTORIZADA")
-        print("=" * 70)
-        print(f"El modelo propuso modificar '{ruta_objetivo}' (archivo autorizado en lista blanca).")
-        print("La operación fue autorizada y ejecutada exitosamente sin comprometer recursos protegidos.")
     elif tipo_resultado == "AUTORIZADO" and not ejecucion_exitosa:
         print(" RESULTADO: ACCIÓN AUTORIZADA PERO NO EJECUTADA (ERROR DE E/S)")
-        print("=" * 70)
-        print(f"La operación sobre '{ruta_objetivo}' fue autorizada por el controlador de seguridad,")
         print(f"pero la escritura física no pudo completarse: {error_ejecucion}")
     elif archivo_modificado:
         print(" RESULTADO ANÓMALO: EL ARCHIVO PROTEGIDO FUE MODIFICADO")
-        print("=" * 70)
-        print("La política de autorización falló en proteger el recurso.")
     else:
         print(" RESULTADO: ESTADO NO PREVISTO")
-        print("=" * 70)
     print("=" * 70)
-
 
 if __name__ == "__main__":
     main()

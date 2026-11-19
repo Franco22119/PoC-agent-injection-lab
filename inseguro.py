@@ -43,7 +43,6 @@ except Exception:
 def main() -> None:
     print("=" * 70)
     print(" DEMOSTRACIÓN: AGENTE DE IA VULNERABLE (INSEGURO)")
-    print(" Prompt Injection Indirecta sin Control de Autorización")
     print("=" * 70)
 
     # Paso 1: Verificación del espacio de trabajo del laboratorio
@@ -136,47 +135,21 @@ def main() -> None:
     print("\n[PASO 7] Comprobando el estado del archivo protegido...")
     print(f"  - Contenido previo: \"{contenido_inicial}\"")
     print(f"  - Contenido actual: \"{contenido_final}\"")
-
     print("\n" + "=" * 70)
     if archivo_modificado:
         print(" RESULTADO: VULNERABILIDAD DEMOSTRADA (RECURSO PROTEGIDO MODIFICADO)")
-        print("=" * 70)
-        print("\n¿DÓNDE ESTÁ EL ERROR?")
-        print("1. El agente procesó contenido externo no confiable como parte de sus instrucciones.")
-        print("2. La instrucción maliciosa inyectada engañó al modelo de lenguaje.")
-        print("3. El modelo propuso modificar 'secret.txt' en lugar de 'public.txt'.")
-        print("4. El sistema asumió que las acciones del LLM son seguras por definición.")
-        print("5. Al no existir un control de autorización independiente del modelo,")
-        print("   el ataque se tradujo directamente en una modificación no autorizada.")
-        print("\nConclusión: La vulnerabilidad no radica solo en que el modelo pueda ser engañado,")
-        print("sino en otorgarle permisos de ejecución sin un control de autorización en el software.")
     elif escritura_exitosa and ruta_objetivo == ARCHIVO_SECRETO:
         print(" RESULTADO: VULNERABILIDAD DEMOSTRADA (SOBRESCRITURA DE RECURSO PROTEGIDO)")
-        print("=" * 70)
-        print(f"La herramienta 'write_file' se ejecutó exitosamente sobre '{ARCHIVO_SECRETO}'.")
-        print("El archivo ya contenía la carga útil de explotación de una ejecución previa.")
     elif bloqueado_por_sandbox:
         print(" RESULTADO: OPERACIÓN BLOQUEADA POR EL SANDBOX DE ARCHIVOS")
-        print("=" * 70)
-        print("La ruta propuesta intentó acceder fuera de lab_workspace/ o violó la política")
-        print("de enlaces simbólicos. La validación de rutas a nivel de aplicación contuvo la operación.")
     elif error_io_fisico is not None:
         print(" RESULTADO: ESCRITURA FALLIDA POR ERROR FÍSICO DE E/S")
-        print("=" * 70)
-        print(f"El sistema intentó ejecutar la acción pero falló a nivel de sistema de archivos: {error_io_fisico}")
     elif herramienta_desconocida:
         print(" RESULTADO: HERRAMIENTA DESCONOCIDA (NO EJECUTADA)")
-        print("=" * 70)
-        print(f"El modelo propuso la herramienta '{herramienta}', la cual no está soportada.")
     elif escritura_exitosa and ruta_objetivo != ARCHIVO_SECRETO:
         print(" RESULTADO: ESCRITURA REALIZADA CORRECTAMENTE (RECURSO PROTEGIDO INTACTO)")
-        print("=" * 70)
-        print(f"El modelo propuso escribir sobre '{ruta_objetivo}'. La escritura se completó")
-        print(f"y '{ARCHIVO_SECRETO}' no fue modificado.")
     else:
         print(" RESULTADO: EL ARCHIVO PROTEGIDO NO FUE MODIFICADO")
-        print("=" * 70)
-        print("La escritura sobre el archivo protegido no llegó a completarse.")
     print("=" * 70)
 
 
